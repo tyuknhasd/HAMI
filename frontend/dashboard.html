@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HAMI — Dashboard</title>
+<link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div>
+        <div class="brand-name">HAMI</div>
+        <div class="brand-sub">Panel</div>
+      </div>
+    </div>
+    <div class="nav-item active" data-view="overview" data-i18n="overview">Overview</div>
+    <div class="nav-item" data-view="links" data-i18n="links">Tunnel links</div>
+    <div class="nav-item" data-view="speed" data-i18n="speed">Speed settings</div>
+    <div class="nav-item" data-view="mtproto" data-i18n="mtproto">Telegram proxy</div>
+    <div class="nav-item" data-view="settings" data-i18n="settings">Settings</div>
+    <div style="flex:1"></div>
+    <div class="nav-item" onclick="toggleLang()" id="lang-btn"></div>
+    <div class="nav-item" onclick="logout()" data-i18n="log_out">Log out</div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h1 id="view-title" style="margin:0; font-size:22px;">Overview</h1>
+      </div>
+      <div id="topbar-actions"></div>
+    </div>
+    <div class="tunnel-rule"></div>
+
+    <div style="height:26px;"></div>
+
+    <!-- OVERVIEW -->
+    <section id="view-overview">
+      <div class="grid cols-4">
+        <div class="card stat-card">
+          <div class="stat-label" data-i18n="total_links">Total links</div>
+          <div class="stat-value" id="stat-total">—</div>
+        </div>
+        <div class="card stat-card">
+          <div class="stat-label" data-i18n="active_links">Active links</div>
+          <div class="stat-value teal" id="stat-active">—</div>
+        </div>
+        <div class="card stat-card">
+          <div class="stat-label" data-i18n="total_used">Total traffic used</div>
+          <div class="stat-value" id="stat-used">—</div>
+        </div>
+        <div class="card stat-card">
+          <div class="stat-label" data-i18n="last_24h">Last 24h traffic</div>
+          <div class="stat-value violet" id="stat-today">—</div>
+        </div>
+      </div>
+
+      <div style="height:18px;"></div>
+      <div class="card">
+        <div class="stat-label" style="margin-bottom:14px;" data-i18n="traffic_7d">Traffic usage — last 7 days (GB)</div>
+        <canvas id="chart" height="90"></canvas>
+      </div>
+    </section>
+
+    <!-- LINKS -->
+    <section id="view-links" style="display:none;">
+      <div id="links-list"></div>
+    </section>
+
+    <!-- SPEED SETTINGS -->
+    <section id="view-speed" style="display:none;">
+      <div id="speed-panel"></div>
+    </section>
+
+    <!-- MTPROTO -->
+    <section id="view-mtproto" style="display:none;">
+      <div id="mtproto-list"></div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section id="view-settings" style="display:none;">
+      <div id="settings-panel"></div>
+    </section>
+  </main>
+</div>
+
+<div id="modal-root"></div>
+<div id="toast-root"></div>
+
+<script src="/static/js/i18n.js"></script>
+<script src="/static/js/dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HAMI — Sign in</title>
+<link rel="stylesheet" href="/static/css/style.css">
+<script src="/static/js/i18n.js"></script>
+</head>
+<body>
+  <div class="login-wrap">
+    <button class="nav-item lang-switch" style="position:absolute; top:16px; right:16px;" onclick="toggleLang()" id="lang-btn"></button>
+
+    <!-- cute face avatar: eyes track cursor / typing, hands cover face on password -->
+    <div class="face-avatar" id="face-avatar" aria-hidden="true">
+      <svg viewBox="0 0 160 150" width="150" height="140">
+        <!-- ears -->
+        <ellipse cx="22" cy="55" rx="12" ry="18" fill="#2b3a4d"/>
+        <ellipse cx="138" cy="55" rx="12" ry="18" fill="#2b3a4d"/>
+        <!-- head -->
+        <ellipse cx="80" cy="60" rx="58" ry="54" fill="#1c2736" stroke="#4fe8cf" stroke-width="2.5"/>
+        <!-- eyes -->
+        <ellipse class="eye" cx="62" cy="55" rx="13" ry="15" fill="#0e1520"/>
+        <ellipse class="eye" cx="98" cy="55" rx="13" ry="15" fill="#0e1520"/>
+        <circle class="pupil" cx="62" cy="55" r="5.5" fill="#4fe8cf"/>
+        <circle class="pupil" cx="98" cy="55" r="5.5" fill="#4fe8cf"/>
+        <!-- mouth -->
+        <path class="mouth" d="M 68 86 Q 80 96 92 86" stroke="#4fe8cf" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <!-- hands drawn LAST so they cover the face/eyes when raised -->
+        <g class="hand hand-left">
+          <ellipse cx="34" cy="112" rx="18" ry="12" fill="#3a4c63" stroke="#4fe8cf" stroke-width="1.5"/>
+        </g>
+        <g class="hand hand-right">
+          <ellipse cx="126" cy="112" rx="18" ry="12" fill="#3a4c63" stroke="#4fe8cf" stroke-width="1.5"/>
+        </g>
+      </svg>
+    </div>
+
+    <div class="login-card">
+      <div class="brand" style="padding:0 0 22px;">
+        <div class="brand-mark"></div>
+        <div>
+          <div class="brand-name">HAMI</div>
+          <div class="brand-sub" data-i18n="panel_sub">Tunnel management panel</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label data-i18n="username">Username</label>
+        <input id="username" type="text" autocomplete="username">
+      </div>
+      <div class="field">
+        <label data-i18n="password">Password</label>
+        <input id="password" type="password" autocomplete="current-password">
+      </div>
+      <button class="btn btn-primary" style="width:100%; justify-content:center; margin-top:6px;" onclick="login()" data-i18n="sign_in">Sign in</button>
+      <div id="err" style="color:#f2726b; font-size:13px; margin-top:12px; display:none;"></div>
+    </div>
+  </div>
+
+<script>
+function applyStaticI18n() {
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  document.getElementById('lang-btn').textContent = t('lang_toggle');
+}
+applyStaticI18n();
+
+/* ---- face avatar: eyes follow cursor; follow typing in username;
+      hands cover the face while typing the password ---- */
+(function () {
+  const avatar = document.getElementById('face-avatar');
+  const pw = document.getElementById('password');
+  const user = document.getElementById('username');
+  if (!avatar) return;
+  const pupils = avatar.querySelectorAll('.pupil');
+  const eyes = avatar.querySelectorAll('.eye');
+  const hands = avatar.querySelectorAll('.hand');
+  const mouth = avatar.querySelector('.mouth');
+  const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
+
+  let typingMode = 'none'; // 'user' | 'pw' | 'none'
+
+  function setPupils(dx, dy) {
+    // dx/dy are the desired pupil offset in user units (viewBox 160x150)
+    pupils.forEach((p, i) => {
+      const baseX = i === 0 ? 62 : 98;
+      const ox = clamp(dx, -5.5, 5.5);
+      const oy = clamp(dy, -5.5, 5.5);
+      p.setAttribute('transform', `translate(${ox}, ${oy})`);
+    });
+  }
+
+  // follow the mouse (only when typing mode is 'none')
+  document.addEventListener('mousemove', e => {
+    if (typingMode !== 'none') return;
+    const r = avatar.getBoundingClientRect();
+    const cx = r.left + r.width / 2;
+    const cy = r.top + r.height / 2;
+    const dx = e.clientX - cx, dy = e.clientY - cy;
+    const len = Math.max(1, Math.hypot(dx, dy));
+    setPupils((dx / len) * 5, (dy / len) * 5);
+  });
+
+  // username typing: eyes dart around playfully with each keystroke
+  user.addEventListener('input', () => {
+    if (typingMode === 'pw') return;
+    typingMode = 'user';
+    setPupils((Math.random() * 2 - 1) * 5, (Math.random() * 2 - 1) * 3);
+  });
+  user.addEventListener('blur', () => {
+    if (typingMode === 'pw') return;
+    typingMode = 'none';
+    setPupils(0, 0);
+  });
+
+  // password typing: hands come up and cover the face, eyes close
+  function setEyesOpen(open) {
+    pupils.forEach(p => {
+      p.setAttribute('ry', open ? '5.5' : '0.8');
+      p.setAttribute('fill', open ? '#4fe8cf' : '#2c8f80');
+    });
+  }
+  function setHandsCover(cover) {
+    // move hands up toward the eyes (left hand → left eye, right hand → right eye)
+    hands.forEach((h, i) => {
+      if (cover) {
+        h.setAttribute('transform', i === 0
+          ? 'translate(20, -45)'
+          : 'translate(-20, -45)');
+      } else {
+        h.setAttribute('transform', '');
+      }
+    });
+  }
+  pw.addEventListener('focus', () => {
+    typingMode = 'pw';
+    setHandsCover(true);
+    setEyesOpen(false);
+    setPupils(0, 0);
+  });
+  pw.addEventListener('blur', () => {
+    typingMode = 'none';
+    setHandsCover(false);
+    setEyesOpen(true);
+  });
+
+  // initial pose: neutral
+  setPupils(0, 0);
+})();
+/* ---- end face avatar ---- */
+
+async function login() {
+  const username = document.getElementById('username').value;
+  const password = document.getElementById('password').value;
+  const errEl = document.getElementById('err');
+  errEl.style.display = 'none';
+  try {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({username, password})
+    });
+    if (!res.ok) throw new Error(t('invalid_login'));
+    const data = await res.json();
+    localStorage.setItem('hami_token', data.access_token);
+    window.location.href = '/dashboard';
+  } catch (e) {
+    errEl.textContent = e.message;
+    errEl.style.display = 'block';
+  }
+}
+document.getElementById('password').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+</script>
+</body>
+</html>
